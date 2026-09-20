@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Antigravalgia",
+  "version": "1.0.0",
+  "description": "Toolbar lower back that hurts while Antigravity CLI is working and relaxes when Antigravity is ready.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArhVFUtMcSxvcc8HhDyPT2L833xXHPqejtJkB2V3i5Y7vQxq/A0thSXwUz41kkiVvRvhnz6+WEPxRCsHoa1e1a1WDHH2hb57UjFVRKSc/eCk7KaWsL3H8NePuvNmv03SjtkvIQPiZUKM+UpwF9rKro5bOMWqFQOThxf4i6iGFPhVwLCmzfbd+yRJ4kNy1RSKI4b8vm+YVFwujC+GvihLUbXe1USB56/DqfD19mQyMzp64/FOiDCmkQC4blW35IfhKpt6eMbKYm0hpv0hQwxadw9Mn0gIM5NUKlEMSVMBf9S0u5fDB/US4ojKHkYRcc22lJddKMHh7/EFCOmP+Zo6kvwIDAQAB",
+  "permissions": [
+    "nativeMessaging",
+    "alarms"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Antigravalgia: connecting\u2026",
+    "default_icon": {
+      "16": "icons/back-unknown-16.png",
+      "32": "icons/back-unknown-32.png",
+      "48": "icons/back-unknown-48.png",
+      "128": "icons/back-unknown-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/back-ok-16.png",
+    "32": "icons/back-ok-32.png",
+    "48": "icons/back-ok-48.png",
+    "128": "icons/back-ok-128.png"
+  }
+}
