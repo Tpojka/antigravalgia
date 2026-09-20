@@ -39,5 +39,6 @@ Recorded here because the documentation doesn't state them:
 - `workspacePaths` is **empty in headless (`agy -p`) runs**, even when started inside a project.
 - `timeout` is in seconds, and `/hooks` reports it as `timeout_seconds`.
 - `agy -p "/hooks" --output-format json` answers without starting a turn.
+- A full headless turn against the installed hooks ends with the session on `ready`, so `Stop` fires with `fullyIdle: true` when a turn completes normally.
 
 [1.0.0]: https://github.com/Tpojka/antigravalgia/releases/tag/v1.0.0

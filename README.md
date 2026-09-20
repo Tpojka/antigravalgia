@@ -200,12 +200,15 @@ Below 1.1.10 the `Stop` hook may never fire, and the back would only relax on th
 
 These were checked against agy 1.2.7 on macOS and **are** confirmed: the hook `command` string runs through a shell (quoting, arguments and `|| true` all take effect); `timeout` is in seconds; `/hooks` lists the bundle; `PreInvocation`, `PreToolUse`, `PostToolUse` and `PostInvocation` all fire in headless runs; `error` is `""` after a successful tool call; and the hook's own working directory is the *hooks file's* folder, not your project — which is why the project name comes from the payload.
 
+A full `agy -p` turn was also run end to end against the installed hooks: Antigravity listed the `antigravalgia` bundle in `/hooks`, ran it, and the session file ended on `ready` — so **`Stop` does fire, with `fullyIdle: true`, at the end of a normal turn.**
+
 Still open:
 
 - **`workspacePaths` is empty in headless runs**, even when `agy -p` is started inside a project, so the "ready" notification then carries no project name. Whether the TUI fills it in is untested.
 - Whether `Stop` fires when a turn ends by permission denial. It did not in the headless runs observed here.
 - What `terminationReason` values occur, and whether `fullyIdle` is ever `false` in practice.
 - Whether Ctrl+C (cancel) fires `Stop` at all. If it doesn't, the session counts as busy until the 15-minute rule applies.
+- The status line in a real TUI session. Its script is exercised by the tests and by hand with real payloads, but not yet by Antigravity itself.
 - Whether hooks run under `agy --sandbox`, and whether they can still write to the data folder.
 - Whether the same hooks light the icon for Antigravity 2.0 and IDE sessions.
 - Which shell runs a `command` string on Windows. CI runs the generated command through PowerShell, but not through Antigravity CLI itself.
