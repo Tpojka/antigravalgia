@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antigravalgia · Antigravity CLI status in your Chrome toolbar</title>
+<meta name="description" content="A Chrome toolbar lower back that hurts while Antigravity CLI is working and relaxes when Antigravity is ready. Optional desktop notifications on macOS, Ubuntu and Windows.">
+<meta property="og:title" content="Antigravalgia">
+<meta property="og:description" content="A Chrome toolbar lower back that hurts while Antigravity CLI works and relaxes when Antigravity is ready.">
+<meta property="og:url" content="https://antigravalgia.tpojka.com/">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'> <circle cx='64' cy='64' r='60' fill='%23fdeaea'/> <circle cx='70' cy='24' r='12' fill='%23b93a32'/> <path d='M70 44 L66 74 L62 112' fill='none' stroke='%23b93a32' stroke-width='19' stroke-linecap='round' stroke-linejoin='round'/> <path d='M70 52 L92 66' fill='none' stroke='%23b93a32' stroke-width='13' stroke-linecap='round'/> <circle cx='64' cy='86' r='23' fill='%23ff3b30' opacity='0.35'/> <circle cx='64' cy='86' r='15' fill='%23ff3b30'/> <g stroke='%23ff3b30' stroke-width='7' stroke-linecap='round' fill='none'> <path d='M35 86 L20 86'/> <path d='M40 65 L29 55'/> <path d='M40 107 L29 117'/> </g> </svg>">
+<link rel="alternate" type="text/markdown" href="index.md">
+<style>
+  :root {
+    --bg: #faf8f5;
+    --surface: #ffffff;
+    --text: #1f1d1a;
+    --muted: #6b665e;
+    --line: #e7e2da;
+    --code-bg: #f3efe8;
+    --pain: #c9392f;
+    --pain-soft: #fdeaea;
+    --ok: #2e9e55;
+    --ok-soft: #e8f7ec;
+    --accent: #c9392f;
+    --shadow: 0 1px 2px rgba(31, 29, 26, .04), 0 8px 24px rgba(31, 29, 26, .06);
+    --radius: 14px;
+    --header-bg: rgba(250, 248, 245, .86);
+    --header-h: 64px;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151412;
+      --surface: #1d1b19;
+      --text: #ece8e2;
+      --muted: #a39d93;
+      --line: #2e2b27;
+      --code-bg: #24211e;
+      --pain: #ff6b5f;
+      --pain-soft: #3a1f1c;
+      --ok: #5fd08a;
+      --ok-soft: #1a3324;
+      --accent: #ff6b5f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .25);
+      --header-bg: rgba(21, 20, 18, .86);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  /* Anchored sections stop below the sticky header instead of under it. */
+  [id] { scroll-margin-top: calc(var(--header-h) + 12px); }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 var(--sans);
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  code, pre { font-family: var(--mono); font-size: .88em; }
+  :not(pre) > code { background: var(--code-bg); padding: .12em .4em; border-radius: 6px; }
+
+  /* Header: stays at the top while scrolling */
+  header.top {
+    position: sticky; top: 0; z-index: 10;
+    padding-block: calc(14px + env(safe-area-inset-top, 0px)) 14px;
+    background: var(--header-bg);
+    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    backdrop-filter: saturate(180%) blur(12px);
+    border-bottom: 1px solid transparent;
+    transition: border-color .2s;
+  }
+  header.top.scrolled { border-bottom-color: var(--line); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.01em; color: var(--text); text-decoration: none; }
+  .brand svg { width: 28px; height: 28px; }
+  nav { display: flex; gap: 18px; flex-wrap: wrap; font-size: .95rem; }
+  nav a { color: var(--muted); text-decoration: none; }
+  nav a:hover, nav a[aria-current="true"] { color: var(--text); }
+  nav a[aria-current="true"] { text-decoration: underline; text-decoration-color: var(--accent); text-decoration-thickness: 2px; text-underline-offset: 6px; }
+
+  /* Hero */
+  .hero > *, .states > *, .features > * { min-width: 0; }
+  .hero { padding-block: 56px 40px; display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; }
+  .hero h1 { font-size: clamp(2.3rem, 6vw, 3.4rem); line-height: 1.05; letter-spacing: -.03em; margin: 0 0 16px; }
+  .hero h1 .pain { color: var(--pain); }
+  .hero h1 .ok { color: var(--ok); }
+  .hero p.lead { font-size: 1.2rem; color: var(--muted); margin: 0 0 24px; max-width: 34em; }
+  .definition { font-size: .9rem; color: var(--muted); border-left: 3px solid var(--line); padding-left: 12px; margin: 0 0 28px; font-style: italic; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px; font-weight: 600; text-decoration: none; font-size: .98rem; }
+  .btn.primary { background: var(--text); color: var(--bg); }
+  .btn.ghost { border: 1px solid var(--line); color: var(--text); background: var(--surface); }
+
+  /* The toolbar mock with the animated lower back */
+  .toolbar {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+    padding: 14px; width: 260px; max-width: 100%;
+  }
+  .toolbar .bar { display: flex; align-items: center; gap: 10px; background: var(--code-bg); border-radius: 10px; padding: 8px 10px; }
+  .toolbar .url { flex: 1; height: 10px; border-radius: 5px; background: var(--line); }
+  .toolbar .ext { width: 18px; height: 18px; border-radius: 4px; background: var(--line); }
+  .status { position: relative; width: 30px; height: 30px; }
+  .status svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .status .k-pain { animation: pain 6s infinite; }
+  .status .k-ok { animation: ok 6s infinite; }
+  @keyframes pain { 0%, 45% { opacity: 1; } 50%, 95% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes ok { 0%, 45% { opacity: 0; } 50%, 95% { opacity: 1; } 100% { opacity: 0; } }
+  .toolbar .tip { margin-top: 12px; font-size: .85rem; color: var(--muted); min-height: 1.4em; position: relative; }
+  .toolbar .tip span { position: absolute; left: 0; top: 0; white-space: nowrap; }
+  .toolbar .tip .t-pain { animation: pain 6s infinite; color: var(--pain); }
+  .toolbar .tip .t-ok { animation: ok 6s infinite; color: var(--ok); }
+  .status.big { width: 150px; height: 150px; margin: 4px auto 18px; }
+  @media (prefers-reduced-motion: reduce) {
+    .status .k-pain, .toolbar .tip .t-pain { animation: none; opacity: 1; }
+    .status .k-ok, .toolbar .tip .t-ok { animation: none; opacity: 0; }
+  }
+
+  /* Sections */
+  section { padding-block: 36px; border-top: 1px solid var(--line); }
+  h2 { font-size: 1.6rem; letter-spacing: -.02em; margin: 0 0 8px; }
+  h3 { font-size: 1.1rem; margin: 24px 0 8px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+
+  .states { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .card svg { width: 52px; height: 52px; display: block; margin-bottom: 12px; }
+  .card h3 { margin: 0 0 4px; }
+  .card p { margin: 0; color: var(--muted); font-size: .95rem; }
+
+  .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 28px; list-style: none; padding: 0; margin: 0; }
+  .features li { padding-left: 28px; position: relative; }
+  .features li::before { content: ""; position: absolute; left: 4px; top: .55em; width: 10px; height: 10px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px var(--ok-soft); }
+  .features b { display: block; }
+  .features span { color: var(--muted); font-size: .95rem; }
+
+  /* Code blocks with copy buttons */
+  .code { position: relative; margin: 12px 0; }
+  pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; line-height: 1.55; }
+  pre .c { color: var(--muted); }
+  .copy {
+    position: absolute; top: 8px; right: 8px; font: 600 .75rem var(--sans); color: var(--muted);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px; cursor: pointer;
+  }
+  .copy:hover { color: var(--text); }
+
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 4px; }
+  .tabs button {
+    font: 600 .9rem var(--sans); color: var(--muted); background: transparent; border: 1px solid var(--line);
+    border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  }
+  .tabs button[aria-selected="true"] { color: var(--bg); background: var(--text); border-color: var(--text); }
+
+  ol.steps { padding-left: 1.3em; margin: 12px 0 0; }
+  ol.steps li { margin-bottom: 6px; }
+
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; }
+
+  .note { background: var(--pain-soft); border-radius: 12px; padding: 12px 16px; font-size: .95rem; }
+
+  footer { border-top: 1px solid var(--line); padding-block: 28px 40px; color: var(--muted); font-size: .9rem; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 720px) {
+    .hero { grid-template-columns: 1fr; padding-block: 32px 28px; }
+    .toolbar { justify-self: start; }
+    .states, .features { grid-template-columns: 1fr; }
+    header.top { padding-block: calc(10px + env(safe-area-inset-top, 0px)) 10px; }
+    header.top .wrap { gap: 6px 16px; }
+    nav { gap: 14px; font-size: .9rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Icons used on the page, drawn once -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="back-pain" viewBox="0 0 128 128">
+    <circle cx="64" cy="64" r="60" fill="#fdeaea"/>
+    <circle cx="70" cy="24" r="12" fill="#b93a32"/>
+    <path d="M70 44 L66 74 L62 112" fill="none" stroke="#b93a32" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 52 L92 66" fill="none" stroke="#b93a32" stroke-width="13" stroke-linecap="round"/>
+    <circle cx="64" cy="86" r="23" fill="#ff3b30" opacity="0.35"/>
+    <circle cx="64" cy="86" r="15" fill="#ff3b30"/>
+    <g stroke="#ff3b30" stroke-width="7" stroke-linecap="round" fill="none">
+      <path d="M35 86 L20 86"/>
+      <path d="M40 65 L29 55"/>
+      <path d="M40 107 L29 117"/>
+    </g>
+  </symbol>
+  <symbol id="back-ok" viewBox="0 0 128 128">
+    <circle cx="64" cy="64" r="60" fill="#e8f7ec"/>
+    <circle cx="70" cy="24" r="12" fill="#2e9e55"/>
+    <path d="M70 44 L66 74 L62 112" fill="none" stroke="#2e9e55" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 52 L92 66" fill="none" stroke="#2e9e55" stroke-width="13" stroke-linecap="round"/>
+    <circle cx="64" cy="86" r="15" fill="#43c06d"/>
+    <path d="M26 40 l7 11 l12 -20" fill="none" stroke="#2e9e55" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="back-unknown" viewBox="0 0 128 128">
+    <circle cx="64" cy="64" r="60" fill="#eeeeee"/>
+    <circle cx="70" cy="24" r="12" fill="#8a8a8a"/>
+    <path d="M70 44 L66 74 L62 112" fill="none" stroke="#8a8a8a" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M70 52 L92 66" fill="none" stroke="#8a8a8a" stroke-width="13" stroke-linecap="round"/>
+    <circle cx="64" cy="86" r="15" fill="#aaaaaa"/>
+  </symbol>
+</svg>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><svg aria-hidden="true"><use href="#back-pain"/></svg>Antigravalgia</a>
+    <nav aria-label="Sections">
+      <a href="#states">States</a>
+      <a href="#install">Install</a>
+      <a href="#notifier">Notifier</a>
+      <a href="#how">How it works</a>
+      <a href="https://github.com/Tpojka/antigravalgia">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <div>
+      <h1>Your back <span class="pain">hurts</span> while Antigravity works.<br>It <span class="ok">relaxes</span> when Antigravity is ready.</h1>
+      <p class="lead">A Chrome toolbar button that shows whether Antigravity CLI is working, with optional desktop notifications. It works on macOS, Ubuntu and Windows.</p>
+      <p class="definition">antigravalgia (n.): antigrav + -algia (pain). Physiology calls the muscles that hold you upright — the erector spinae above all — the antigravity muscles. They are also the ones that ache after a day at a desk.</p>
+      <div class="cta">
+        <a class="btn primary" href="#install">Install</a>
+        <a class="btn ghost" href="https://github.com/Tpojka/antigravalgia">View on GitHub</a>
+      </div>
+    </div>
+
+    <div class="toolbar" role="img" aria-label="Chrome toolbar showing the Antigravalgia lower back switching between working and ready">
+      <div class="status big" aria-hidden="true">
+        <svg class="k-pain"><use href="#back-pain"/></svg>
+        <svg class="k-ok"><use href="#back-ok"/></svg>
+      </div>
+      <div class="bar">
+        <div class="url"></div>
+        <div class="ext"></div>
+        <div class="status" aria-hidden="true">
+          <svg class="k-pain"><use href="#back-pain"/></svg>
+          <svg class="k-ok"><use href="#back-ok"/></svg>
+        </div>
+      </div>
+      <div class="tip" aria-hidden="true">
+        <span class="t-pain">Antigravity is working…</span>
+        <span class="t-ok">Antigravity is ready</span>
+      </div>
+    </div>
+  </div>
+
+  <section id="states">
+    <h2>Three states, one glance</h2>
+    <p class="sub">Hover over the icon to see how many sessions are working.</p>
+    <div class="states">
+      <div class="card">
+        <svg aria-hidden="true"><use href="#back-pain"/></svg>
+        <h3>Working</h3>
+        <p>Antigravity is working on a task in at least one session.</p>
+      </div>
+      <div class="card">
+        <svg aria-hidden="true"><use href="#back-ok"/></svg>
+        <h3>Ready</h3>
+        <p>Antigravity has finished, or it's waiting for you to confirm a tool.</p>
+      </div>
+      <div class="card">
+        <svg aria-hidden="true"><use href="#back-unknown"/></svg>
+        <h3>Not connected</h3>
+        <p>The local helper isn't running. Run the installer.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What you get</h2>
+    <p class="sub">Small, local, and with no dependencies beyond Python 3.</p>
+    <ul class="features">
+      <li><b>Live toolbar status</b><span>The icon changes the moment Antigravity starts or finishes a turn, with no polling delay.</span></li>
+      <li><b>Every session</b><span>The back hurts while any Antigravity session is working.</span></li>
+      <li><b>"Needs you" alerts</b><span>Antigravity's hooks can't tell you it's waiting. Its status line can, and Antigravalgia uses it — optionally, and never over a status line you already have.</span></li>
+      <li><b>Three platforms</b><span>macOS, Ubuntu/Linux and Windows. The installer detects which one you're on.</span></li>
+      <li><b>Stays out of the way</b><span>It owns one bundle in your shared hooks file, backs it up, and leaves a file it can't parse untouched.</span></li>
+      <li><b>Fully local</b><span>Nothing leaves your machine. The status goes from Antigravity's hooks to Chrome over native messaging.</span></li>
+    </ul>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <p class="sub">Requires Python 3.9 or newer, Google Chrome and Antigravity CLI 1.1.10 or newer.</p>
+
+    <div class="tabs" role="tablist" aria-label="Operating system">
+      <button role="tab" aria-selected="true" data-os="macos">macOS</button>
+      <button role="tab" aria-selected="false" data-os="ubuntu">Ubuntu</button>
+      <button role="tab" aria-selected="false" data-os="windows">Windows</button>
+    </div>
+    <div class="code" data-panel="macos"><pre><code>git clone https://github.com/Tpojka/antigravalgia.git
+cd antigravalgia
+./install.sh</code></pre></div>
+    <div class="code" data-panel="ubuntu" hidden><pre><code>sudo apt install python3 libnotify-bin   <span class="c"># notify-send, for the notifier</span>
+git clone https://github.com/Tpojka/antigravalgia.git
+cd antigravalgia
+./install.sh</code></pre></div>
+    <div class="code" data-panel="windows" hidden><pre><code>winget install Python.Python.3.12        <span class="c"># if Python isn't installed</span>
+git clone https://github.com/Tpojka/antigravalgia.git
+cd antigravalgia
+install.cmd</code></pre></div>
+
+    <h3>Choose what to install</h3>
+    <pre><code>  1) Chrome extension
+  2) Chrome extension + OS notifier
+  3) Nothing (exit)
+Choose 1, 2 or 3: 2
+Play a sound with notifications? [Y/n]:
+Also show "needs you" alerts? This sets Antigravity's status line command. [y/N]:</code></pre>
+
+    <h3>Finish in Chrome (once)</h3>
+    <ol class="steps">
+      <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b>.</li>
+      <li>Click <b>Load unpacked</b> and pick the <code>extension</code> folder the installer printed.</li>
+      <li>Pin <b>Antigravalgia</b> to the toolbar.</li>
+      <li>Restart any running Antigravity sessions, then check the hooks loaded with <code>agy -p "/hooks" --output-format json</code>.</li>
+    </ol>
+    <p class="note">Antigravalgia writes one bundle named <code>antigravalgia</code> into the shared <code>~/.gemini/config/hooks.json</code>, and nothing else. Your other bundles stay, the file is backed up first, and a file it can't parse is left exactly as it is.</p>
+  </section>
+
+  <section id="notifier">
+    <h2>OS notifier</h2>
+    <p class="sub">You get a notification when Antigravity finishes a turn, and — with the status line on — when it needs you. The title includes the project name.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>When</th><th>Title</th><th>Text</th><th>Needs</th></tr></thead>
+        <tbody>
+          <tr><td>Antigravity finishes a turn</td><td>Antigravity is ready · <i>project</i></td><td>Task finished</td><td>hooks</td></tr>
+          <tr><td>A tool confirmation dialog opens</td><td>Antigravity needs you · <i>project</i></td><td>Waiting for your confirmation</td><td>the status line</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <h3>The status line: where "needs you" comes from</h3>
+    <p>Antigravity's hooks have no notification, permission, session-start or session-end event — five events, and none of them says the agent is waiting for you. Its <b>status line</b> does: whenever the agent state changes, the TUI runs a script of your choosing and pipes it a payload carrying <code>agent_state</code> and <code>tool_confirmation_pending</code>.</p>
+    <p>So Antigravalgia offers the status line as an optional precision mode on top of the hooks. It adds one short line under Antigravity's own, telling you only what that line can't know — how your other sessions are doing:</p>
+    <div class="code"><pre><code>antigravalgia · ready · 1 of 2 sessions working</code></pre></div>
+    <p class="note">It <b>never overwrites a status line you already have</b>. If <code>statusLine.command</code> is already set to something else, the installer says so and prints the command to set by hand. Turn it on or off later with <code>python3 -m antigravalgia.install statusline on|off</code>.</p>
+
+    <h3>Change settings any time</h3>
+    <p>Run these from the repository. They take effect with the next notification, with no restart:</p>
+    <div class="code"><pre><code>python3 -m antigravalgia.install set sound off           <span class="c"># silent notifications</span>
+python3 -m antigravalgia.install set sound on
+python3 -m antigravalgia.install set notifications off   <span class="c"># no notifications at all</span>
+python3 -m antigravalgia.install set notifications on</code></pre></div>
+    <p>On Windows, use <code>py -3</code> instead of <code>python3</code>.</p>
+
+    <h3>Or use your OS settings</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>OS</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td>macOS</td><td>System Settings → Notifications → <b>Script Editor</b></td></tr>
+          <tr><td>Ubuntu (GNOME)</td><td>Settings → Sound → <b>System Sounds</b>, or Notifications → Do Not Disturb</td></tr>
+          <tr><td>Windows</td><td>Settings → System → Notifications → <b>Windows PowerShell</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="how">
+    <h2>How it works</h2>
+    <p class="sub">Antigravity's hooks write each session's state. A small local helper sends changes to Chrome.</p>
+    <div class="code"><pre><code>Antigravity CLI ──hook────────► antigravalgia.pyz hook busy|stop ──► sessions/&lt;conversationId&gt;
+                                            └──────────────────────► desktop notification (optional)
+                └──status line──► antigravalgia.pyz statusline ────► the same file, plus "needs you"
+
+Chrome ──starts──► antigravalgia.pyz host
+                      watches sessions/, pushes status on change
+                                  │  native messaging
+                                  ▼
+                   extension swaps the icon</code></pre></div>
+
+    <h3>Which events it listens to</h3>
+    <p>Antigravity's hook payload carries <b>no event name</b>, so each event registers its own sub-command.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Antigravity event</th><th>Back</th><th>Notification</th></tr></thead>
+        <tbody>
+          <tr><td><code>PreInvocation</code>, <code>PostInvocation</code></td><td>hurts</td><td>none</td></tr>
+          <tr><td><code>PreToolUse</code>, <code>PostToolUse</code></td><td>hurts</td><td>none</td></tr>
+          <tr><td><code>Stop</code> with <code>fullyIdle: true</code></td><td>relaxes</td><td>Antigravity is ready</td></tr>
+          <tr><td><code>Stop</code> with <code>fullyIdle: false</code></td><td>stays hurting</td><td>none</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>And from the status line, when it's on:</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Status line payload</th><th>Back</th><th>Notification</th></tr></thead>
+        <tbody>
+          <tr><td><code>tool_confirmation_pending: true</code></td><td>relaxes — it's your turn</td><td>Antigravity needs you</td></tr>
+          <tr><td><code>agent_state</code> <code>thinking</code>, <code>working</code>, <code>tool_use</code></td><td>hurts</td><td>none</td></tr>
+          <tr><td><code>agent_state</code> <code>idle</code>, <code>initializing</code></td><td>relaxes</td><td>none — the <code>Stop</code> hook already did</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The hook prints nothing and always exits 0. Antigravity reads a hook's stdout as a <i>decision</i> — <code>allow</code>, <code>deny</code>, <code>force_ask</code> — and its exit codes are undocumented, so a <code>PreToolUse</code> hook that misbehaves could gate every tool call. The status line never prints an error either, because its stdout <i>is</i> the status line.</p>
+    <p class="note">It covers <b>Antigravity CLI</b> (<code>agy</code>). Headless <code>agy -p</code> runs are covered by the hooks, but not by the status line, which only runs while the TUI draws. The Antigravity 2.0 app and the IDE read the same hooks file and should work too, but they aren't tested yet. It doesn't cover Gemini CLI, which is a different product.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Antigravalgia 1.0.0 · <a href="https://github.com/Tpojka/antigravalgia/blob/main/LICENSE">MIT</a> © 2026 Goran Grbic</span>
+    <span>Using another agent? <a href="https://claudication.tpojka.com">Claudication</a> for Claude Code, <a href="https://codexalgia.tpojka.com">Codexalgia</a> for Codex CLI, <a href="https://copilonidal.tpojka.com">Copilonidal</a> for GitHub Copilot CLI. · <a href="index.md">Markdown version</a></span>
+    <span>An independent project, not affiliated with Google.</span>
+  </div>
+</footer>
+
+<script>
+  // Sticky header: track its height for anchor offsets, add a border once scrolled,
+  // and mark the menu item of the section being read.
+  (function () {
+    var header = document.querySelector('header.top');
+    var root = document.documentElement;
+    function measure() { root.style.setProperty('--header-h', header.offsetHeight + 'px'); }
+    measure();
+    window.addEventListener('resize', measure);
+
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav a[href^="#"]'));
+    var sections = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+    function update() {
+      header.classList.toggle('scrolled', window.scrollY > 4);
+      var line = header.offsetHeight + 24;
+      var current = null;
+      sections.forEach(function (section, i) {
+        if (section && section.getBoundingClientRect().top <= line) current = i;
+      });
+      if (window.innerHeight + window.scrollY >= root.scrollHeight - 2) current = sections.length - 1;
+      links.forEach(function (a, i) { a.setAttribute('aria-current', String(i === current)); });
+    }
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+  })();
+
+  // Install tabs: preselect the visitor's OS.
+  (function () {
+    var tabs = document.querySelectorAll('.tabs button');
+    var panels = document.querySelectorAll('[data-panel]');
+    function select(os) {
+      tabs.forEach(function (t) { t.setAttribute('aria-selected', String(t.dataset.os === os)); });
+      panels.forEach(function (p) { p.hidden = p.dataset.panel !== os; });
+    }
+    tabs.forEach(function (t) { t.addEventListener('click', function () { select(t.dataset.os); }); });
+    var ua = navigator.userAgent;
+    select(/Windows/.test(ua) ? 'windows' : /Linux|X11/.test(ua) && !/Android/.test(ua) ? 'ubuntu' : 'macos');
+  })();
+
+  // Copy buttons on code blocks.
+  document.querySelectorAll('.code').forEach(function (block) {
+    if (!navigator.clipboard) return;
+    var button = document.createElement('button');
+    button.className = 'copy';
+    button.type = 'button';
+    button.textContent = 'Copy';
+    button.addEventListener('click', function () {
+      var text = block.querySelector('code').innerText.replace(/[ \t]+#.*$/gm, '');
+      navigator.clipboard.writeText(text).then(function () {
+        button.textContent = 'Copied';
+        setTimeout(function () { button.textContent = 'Copy'; }, 1500);
+      });
+    });
+    block.appendChild(button);
+  });
+</script>
+</body>
+</html>
