@@ -70,4 +70,7 @@ def main():
         line = handle(json.loads(sys.stdin.buffer.read()))
     except Exception:
         pass  # an error here would be rendered as the status line
-    print(line)
+    # Bytes again, for the two things print() gets wrong on Windows: it would encode the separator with
+    # the ANSI code page, and turn the newline into CRLF. Antigravity renders this as the status line.
+    sys.stdout.buffer.write(line.encode("utf-8") + b"\n")
+    sys.stdout.buffer.flush()

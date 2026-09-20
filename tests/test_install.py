@@ -91,8 +91,8 @@ class InstallTest(IsolatedTestCase):
             with self.subTest(shell=argv[0]):
                 result = subprocess.run(argv, input=STATUSLINE_PAYLOAD, cwd=self.home, capture_output=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(result.stdout.decode().count("\n"), 1)
-                self.assertIn(b"antigravalgia", result.stdout)
+                # Exactly one LF, no CR, and UTF-8 — whatever the platform's default encoding is.
+                self.assertEqual(result.stdout, "antigravalgia \u00b7 working\n".encode("utf-8"))
 
         # Its stdout is the status line, so garbage in must not become an error message on screen.
         for argv in shells(command):

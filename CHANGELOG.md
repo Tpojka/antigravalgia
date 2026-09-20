@@ -24,6 +24,7 @@ The first release. It was checked against the Antigravity CLI hooks and status l
 - **Notifications are edge-triggered.** The status line script runs on *every* agent state change, so "Antigravity needs you" fires once per dialog, not once per redraw.
 - **A hook command that can't break Antigravity.** It prints nothing and always exits 0 (`|| true` in a shell, `; exit 0` in PowerShell), even when Python or the installed app is missing.
   *Why:* Antigravity parses a hook's stdout as a decision (`allow`, `deny`, `force_ask`) and its exit codes are undocumented, so a misbehaving `PreToolUse` hook could gate every tool call. The status line likewise never prints an error, because its stdout is the status line.
+- **The status line writes UTF-8 bytes with a plain `\n`**, not `print()`. On Windows `print()` would encode the `\u00b7` separator with the ANSI code page and turn the newline into CRLF, and Antigravity renders that stdout as the status line. Caught by CI on Windows.
 - **Hook payload read as UTF-8 bytes**, so project names with non-ASCII letters work on Windows, where text stdin uses the ANSI code page.
 - **Optional OS notifier** (macOS `osascript`, Linux `notify-send`, Windows PowerShell toast), with or without sound: "Antigravity is ready" and "Antigravity needs you".
 - **Its own identifiers:** native host (`com.tpojka.antigravalgia`), extension ID (`bpfhgifephcgodfaicmamfpgpcikhidd`), data directory and `antigravalgia.pyz`, so it doesn't clash with Claudication, Codexalgia or Copilonidal.

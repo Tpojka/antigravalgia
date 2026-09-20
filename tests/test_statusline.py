@@ -1,6 +1,5 @@
 import io
 import json
-from contextlib import redirect_stdout
 from unittest import mock
 
 from antigravalgia import config, state, statusline
@@ -21,14 +20,21 @@ PAYLOAD = {
 
 class StatusLineTest(IsolatedTestCase):
     def send(self, **payload):
-        """Run the status line the way the TUI does, and return the single line it printed."""
-        with mock.patch("sys.stdin", stdin(json.dumps({**PAYLOAD, **payload}))):
-            with redirect_stdout(io.StringIO()) as out:
+        """Run the status line the way the TUI does, and return the single line it wrote."""
+        written = self.run_with(json.dumps({**PAYLOAD, **payload}).encode("utf-8"))
+        self.assertEqual(written.count(b"\n"), 1, f"expected one line, got {written!r}")
+        self.assertTrue(written.endswith(b"\n"), "the status line must end in one newline")
+        self.assertNotIn(b"\r", written)  # CRLF would reach Antigravity as part of the line
+        return written[:-1].decode("utf-8")
+
+    def run_with(self, payload):
+        """Return the raw bytes the status line wrote to stdout."""
+        out = io.BytesIO()
+        stream = mock.Mock(buffer=out)
+        with mock.patch("sys.stdin", stdin(payload.decode("utf-8", "replace"))):
+            with mock.patch("sys.stdout", stream):
                 statusline.main()
-        printed = out.getvalue()
-        self.assertTrue(printed.endswith("\n"), "the status line must be one printed line")
-        self.assertEqual(printed.count("\n"), 1, f"expected one line, got {printed!r}")
-        return printed.strip()
+        return out.getvalue()
 
     def test_working_states_are_busy(self):
         for agent_state in ("thinking", "working", "tool_use"):
@@ -52,17 +58,18 @@ class StatusLineTest(IsolatedTestCase):
         self.send(agent_state="something-new")
         self.assertEqual(state.summary()["state"], "ready")
 
+    def test_the_line_is_written_as_utf8(self):
+        # Windows would otherwise encode the separator with the ANSI code page.
+        self.assertEqual(self.run_with(json.dumps(PAYLOAD).encode()), "antigravalgia \u00b7 ready\n".encode("utf-8"))
+
     def test_line_names_the_state_and_other_sessions(self):
         self.assertEqual(self.send(agent_state="working"), "antigravalgia · working")
         self.assertEqual(self.send(tool_confirmation_pending=True), "antigravalgia · needs you")
         state.set_state("another", state.BUSY)
         self.assertEqual(self.send(agent_state="idle"), "antigravalgia · ready · 1 of 2 sessions working")
 
-    def test_garbage_input_prints_one_empty_line_and_records_nothing(self):
-        with mock.patch("sys.stdin", stdin("not json")):
-            with redirect_stdout(io.StringIO()) as out:
-                statusline.main()
-        self.assertEqual(out.getvalue(), "\n")
+    def test_garbage_input_writes_one_empty_line_and_records_nothing(self):
+        self.assertEqual(self.run_with(b"not json"), b"\n")
         self.assertEqual(state.summary()["total"], 0)
 
     @mock.patch("antigravalgia.notify.send")
