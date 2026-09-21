@@ -1,5 +1,7 @@
 # Antigravalgia
 
+> **Archived.** Antigravalgia is now part of [Perturbation](https://perturbation.tpojka.com), one Chrome toolbar lamp for Claude Code, Codex CLI, GitHub Copilot CLI, Antigravity CLI, opencode, Goose and Qwen Code. Its installer finds Antigravalgia and offers to remove it: <https://perturbation.tpojka.com>
+
 **Your back hurts while Antigravity works. It relaxes when Antigravity is ready.**
 
 A Chrome toolbar button that shows whether Antigravity CLI is working, with optional desktop notifications. It works on macOS, Ubuntu and Windows.
@@ -166,4 +168,4 @@ It covers **Antigravity CLI** (`agy`). Headless `agy -p` runs are covered by the
 
 Antigravalgia 1.0.0 · [MIT](https://github.com/Tpojka/antigravalgia/blob/main/LICENSE) © 2026 Goran Grbic · An independent project, not affiliated with Google.
 
-Using another agent? [Claudication](https://claudication.tpojka.com) for Claude Code, [Codexalgia](https://codexalgia.tpojka.com) for Codex CLI, [Copilonidal](https://copilonidal.tpojka.com) for GitHub Copilot CLI.
+Archived in favor of [Perturbation](https://perturbation.tpojka.com).
